@@ -19,7 +19,7 @@ $(document).ready(() => {
 		   },
 		   success: (response) => {
 		       if (response.status) {
-			   buildaler();
+			   buildalert();
 		       } else {
 			   $('#mesg_div').html("Login failed. Try again.");
 		       }

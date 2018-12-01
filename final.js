@@ -4,9 +4,6 @@ $(document).ready(() => {
     $('#login_btn').on('click', () => {
 		let user = $('#login_user').val();
 		let pass = $('#login_pass').val();
-
-		console.log(user);
-		console.log(pass);
 		
 		$.ajax(root_url + 'sessions', {
 			type: 'POST',
@@ -17,10 +14,14 @@ $(document).ready(() => {
 				  }
 			},
 			success: (response) => {
-				alert('good');
+				construct_page();
 			}, error: () => {
-				alert('error');
+				alert('bad login');
 			}
 		});
 	});
 });
+
+var construct_page = function(){
+	
+}

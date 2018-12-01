@@ -23,5 +23,13 @@ $(document).ready(() => {
 });
 
 var construct_page = function(){
-	
+	let body = $('body');
+
+	body.empy();
+
+	body.append('button class="weatherAPI" id="weatherAPI">Weather</button>');
+
+	let formContainer = $('<div class = "formContainer"></div>');
+
+	body.append(formContainer);
 }

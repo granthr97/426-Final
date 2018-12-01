@@ -19,7 +19,7 @@ $(document).ready(() => {
 		   },
 		   success: (response) => {
 		       if (response.status) {
-			   build_question_interface();
+			   buildaler();
 		       } else {
 			   $('#mesg_div').html("Login failed. Try again.");
 		       }
@@ -31,3 +31,7 @@ $(document).ready(() => {
     });
 });
 //hello
+
+function buildalert(){
+	alert("hello");
+}

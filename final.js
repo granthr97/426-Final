@@ -1,4 +1,4 @@
-var root_url = "http://comp426.cs.unc.edu:3001/";
+var root_url = "http://comp426.cs.unc.edu:3001/api/";
 
 $(document).ready(() => {
     $('#login_btn').on('click', () => {

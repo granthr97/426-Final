@@ -38,7 +38,7 @@ var construct_page = function(){
 	let body = $('body');
 	body.empty();
 	var tickets;
-	get_all_info(tickets, 'tickets', true);
+	get_all_info(tickets, 'flights', true);
 }
 
 // get all tickets, all flights, etc.
@@ -51,28 +51,30 @@ var get_all_info = function(storage, name, retrieve_connected_info){
 		success: (response) => {
 			if (!retrieve_connected_info){
 				storage = response;
+				console.log(storage);
 			} else {
-				storage = {};
+				storage = [];
 				for(let i in response){
-					let unit = storage[i];
-					unit = [];
+					let unit = [];
 					unit[name] = response[i];
 					for (let key in response[i]){
 						if (key.endsWith('_id') && !key.startsWith('user')){
 							let next = key.substring(0, key.length - 3);
 							let id = response[i][key];
-							get_specific_info(unit, next, id);
+							get_specific_info(unit, next, true, id, storage);
 						}
 					}
+					storage[i] = unit;
 				}
 			}
+			console.log(storage);
 		}, error: () => {
 			alert('bad');
 		}
 	});
 }
 
-var get_specific_info = function(unit, name, id){
+var get_specific_info = function(unit, name, retrieve_connected_info, id, storage){
 	if (!id || unit[name]) { return; }
 	let url = root_url;
 	if (name == 'itinerary') { url += 'itineraries/' + id;
@@ -82,18 +84,20 @@ var get_specific_info = function(unit, name, id){
 		type: 'GET',
 		xhrFields: {withCredentials: true},
 		success: (response) => {
-			unit[name] = response;
-			for (let key in response){
-				if (key.endsWith('_id') && !key.startsWith('user')){
-					let next = key.substring(0, key.length - 3);
-					let newid = response[key];
-					get_specific_info(unit, next, newid);
+			if (!retrieve_connected_info){
+				unit = response;
+			} else {
+				unit[name] = response;
+				for (let key in response){
+					if (key.endsWith('_id') && !key.startsWith('user')){
+						let next = key.substring(0, key.length - 3);
+						let newid = response[key];
+						get_specific_info(unit, next, true, newid);
+					}
 				}
 			}
-			console.log(unit);
 		}, error: () => {
 			alert('bad');
 		}
 	});
 }
-

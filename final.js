@@ -41,8 +41,9 @@ var construct_page = function(){
 	get_all_info(tickets, 'tickets', true);
 }
 
+// get all tickets, all flights, etc.
 // e.g. get_all_info(array, 'tickets', true, 123);
-var get_all_info = function(storage, name, retrieve_connected_info, id){
+var get_all_info = function(storage, name, retrieve_connected_info){
 	let url = root_url + name;
 	$.ajax(url, {
 		type: 'GET',
@@ -56,9 +57,6 @@ var get_all_info = function(storage, name, retrieve_connected_info, id){
 					let unit = storage[i];
 					unit = [];
 					unit[name] = response[i];
-					// get_instance(unit, response[i].instance_id);
-					// get_seat(unit, response[i].seat_id);
-					// get_itinerary(unit, response[i].itinerary_id);
 					for (let key in response[i]){
 						if (key.endsWith('_id') && !key.startsWith('user')){
 							let next = key.substring(0, key.length - 3);
@@ -98,3 +96,4 @@ var get_specific_info = function(unit, name, id){
 		}
 	});
 }
+

@@ -298,4 +298,5 @@ let get_instance_seats = (instance_id) => {
 
             return response;
         });
-}
+
+    };

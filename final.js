@@ -62,17 +62,24 @@ let get_filtered = (endpoint, filters) => {
 *   Log- in method:
 *   Retrieves
 */
-let log_in = (username, password) => {
+let log_in = (user, pass) => {
+    let username = user? user : String($('#login_user').val());
+    let password = pass? pass : String($('#login_pass').val());
     $.ajax(root_url + 'sessions', {
         type: 'POST',
         data: {
             user: {
-                username:  username? username : $('#login_user').val(),
-                password: password? password : $('#login_pass').val()
+                username:  username,
+                password: password,
             }
         },
-        success: after_login,
-        error: () => {
+        success: (response) => {
+            console.log('Logged in');
+            after_login();
+        },
+        error:(response) => {
+            console.log('Error logging in');
+            console.log(response);
             $('#login_user').val()
             $('#login_pass').val()
             $('#msg_div').text('Error: bad username or password');
@@ -87,7 +94,7 @@ let log_in = (username, password) => {
 $(() => {
     display_login_page();
     log_in('granthr', 730047576);
-    // find_instances('New Orleans', 'Miami');
+    find_instances('New Orleans', 'Miami');
 });
 
 
@@ -103,7 +110,7 @@ let display_login_page = () => {
     $('<div id="msg_div"></div>').appendTo(login_div);
     button.click(log_in);
     body.append(login_div);
-}
+};
 
 
 /*
@@ -150,12 +157,11 @@ let makeNodes = (data_array, name) => {
 *   Search for user-queried instances (occurrences of flights), acquire and
 *   link relevant data using directed graph nodes, and display the results.
 */
-let find_instances = () => {
-	let from_city = $('#from_city').val();
-	let to_city = $('#to_city').val();
+let find_instances = (to, from) => {
+	let from_city = to? to : $('#from_city').val();
+	let to_city = from? from : $('#to_city').val();
+    $('#search_results').empty();
 
-	console.log(from_city);
-	console.log(to_city);
     /*
     *   Retrieve departure/arrival airports matching the specified cities.
     *   (these functions return AJAX Promises)
@@ -172,7 +178,7 @@ let find_instances = () => {
     *   Wait until both the departure and arrival airports have been retrieved
     */
     Promise.all([get_departure_airports, get_arrival_airports]).then(([departure_list, arrival_list]) => {
-        $('#search_results').empty();
+
         /*
         *   Wrap the arrays of airport information into nodes
         */
@@ -263,6 +269,7 @@ let find_instances = () => {
         $('<span class = "departure_code"></span>').text(departure['code']).appendTo(display_div);
         $('<span class = "arrival_code"></span>').text(arrival['code']).appendTo(display_div);
 
+        console.log(display_div);
         $('#search_results').append(display_div);
     };
 };

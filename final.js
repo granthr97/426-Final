@@ -87,7 +87,7 @@ let log_in = (username, password) => {
 $(() => {
     display_login_page();
     log_in('granthr', 730047576);
-    find_instances('New Orleans', 'Miami');
+    // find_instances('New Orleans', 'Miami');
 });
 
 
@@ -150,9 +150,12 @@ let makeNodes = (data_array, name) => {
 *   Search for user-queried instances (occurrences of flights), acquire and
 *   link relevant data using directed graph nodes, and display the results.
 */
-let find_instances = (from_city, to_city) => {
-    console.log($('#search_results'));
+let find_instances = () => {
+	let from_city = $('#from_city').val();
+	let to_city = $('#to_city').val();
 
+	console.log(from_city);
+	console.log(to_city);
     /*
     *   Retrieve departure/arrival airports matching the specified cities.
     *   (these functions return AJAX Promises)

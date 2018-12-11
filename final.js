@@ -1,5 +1,6 @@
 "use strict";
 
+
 /*
 *   Root URL for database
 */
@@ -81,25 +82,18 @@ let log_in = (username, password) => {
 
 
 /*
-*   UPON LOAD OF PAGE:
-*   Send a simple, invalid POST request (with no data).
-*   If the error response is 400 (logged in) then we continue;
-*   Otherwise, we display the login page.
+*   Upon page load:
 */
 $(() => {
-    $.ajax(root_url + '/airports',{
-        type: 'GET',
-        xhrFields: {withCredentials: true},
-        success: () => {
-            after_login();
-        },
-        error: () => {
-            display_login_page();
-        }
-    });
+    display_login_page();
+    log_in('granthr', 730047576);
+    find_instances('New Orleans', 'Miami');
 });
 
 
+/*
+*   Display login page and assign appropriate event handlers for login function
+*/
 let display_login_page = () => {
     let body = $('body').empty();
     let login_div = $('<div id="login_div"><h1>Book a Flight</h1></div>');
@@ -107,7 +101,7 @@ let display_login_page = () => {
     $('<p>Password: </p><input type="text" id="login_pass"><br>').appendTo(login_div);
     let button = $('<button id="login_btn">Login</button>').appendTo(login_div);
     $('<div id="msg_div"></div>').appendTo(login_div);
-    button.on('click', log_in);
+    button.click(log_in);
     body.append(login_div);
 }
 
@@ -126,100 +120,153 @@ let construct_search = () => {
     search_parameters.append('<p>Max Date: </p><input type="text" id="max_date"><br>');
     search_parameters.append('<p>Min Time: </p><input type="text" id="min_time"><br>');
     search_parameters.append('<p>Max Time: </p><input type="text" id="max_time"><br>');
-    $('<button id="login_btn">Search</button>').appendTo(search_parameters).on('click', perform_search);
+                                                                            // TODO: link function with forms
+    $('<button id="search_btn">Search</button>').appendTo(search_parameters).on('click', find_instances);
     let search_display = $('<div id = "search_display"></div>').appendTo(search);
     search_display.append('<h1>Results:</h1><br>');
     search_display.append('<div id = "search_results"></div>');
-
-
-}
+};
 
 
 /*
-*  Design a tree structure for holding information:
-*  e.g. (root) -> from-airports list -> to-airports list -> flight lists-> instances
-*  
-*  Used, for instance, to store and display information concerning queried flights 
-*  (including date, departure/arrival time, departure/arrival airport
+*   Node for a directed graph; has data, parent nodes and child nodes.
 */
-let Node = (data, parent) => {
+function Node(data, name){
     this.data = data;
-    this.addParent(parent);
-    this.children = [];
-    this.depth = 0;
+    this.adjacent = [];
 }
 
-Node.prototype.addParent = (parent) => {
-    if (!parent) {
-        this.level = 0;
-        return;
-    }
-    this.parent = parent;
-    this.level = parent.level + 1;
-}
 
-Node.prototype.addChild = (data) => {
-    let child = new Node(data, this);
+let makeNodes = (data_array, name) => {
+    let nodes = [];
+    $(data_array).each((i, element) => {
+        nodes[i] = new Node(element, name);
+    });
+    return nodes;
+};
 
-    if (this['children'].length === 0){
-        this.depth = 1;
-        if (parent) {
-            this.parent.alertDepth(1);
-        }
-    }
-    this.children.push(child);
-}
 
-Node.prototype.alertDepth = (depth) => {
-    if ((depth + 1) > this.depth) {
-        this.depth = depth + 1;
-        if(this.parent){
-            this.parent.alertDepth(depth + 1);
-        }
-    }
-}
+/*
+*   Search for user-queried instances (occurrences of flights), acquire and
+*   link relevant data using directed graph nodes, and display the results.
+*/
+let find_instances = (from_city, to_city) => {
+    console.log($('#search_results'));
 
-let perform_search = () => {
-    let from_city = $('#from_city').val();
-    let to_city = $('#to_city').val();
-    let min_date = $('#min_date').val();
-    let max_date = $('#max_date').val();
-    let min_time = $('#min_time').val();
-    let max_time = $('#max_time').val();
-
-    let resultRoot = new Node('');
-
-    let departure_airports = get_filtered("airports", {
+    /*
+    *   Retrieve departure/arrival airports matching the specified cities.
+    *   (these functions return AJAX Promises)
+    */
+    let get_departure_airports = get_filtered("airports", {
         'city': from_city
     });
 
-    let arrival_airports = get_filtered("airports", {
+    let get_arrival_airports = get_filtered("airports", {
         'city': to_city
     });
 
-    let flights = Promise.all([departure_airports, arrival_airports]).then((responses) => {
-        departure_airports = responses[0];
-        arrival_airports = responses[1];
+    /*
+    *   Wait until both the departure and arrival airports have been retrieved
+    */
+    Promise.all([get_departure_airports, get_arrival_airports]).then(([departure_list, arrival_list]) => {
+        $('#search_results').empty();
+        /*
+        *   Wrap the arrays of airport information into nodes
+        */
+        let departure_nodes = makeNodes(departure_list, 'airport');
+        let arrival_nodes = makeNodes(arrival_list, 'airport');
 
-        let flight_responses = [];
-        $(departure_airports).each((i, departure_airport) => {
-            $(arrival_airports).each((j, arrival_airport) => {
-               get_filtered("flights", {
-                    'departure_id': departure_airport.id,
-                    'arrival_id': arrival_airport.id,
-                }).then((response) => {
-                   flight_responses.push(response);
-               });
+        /*
+        *   For each combination of departure and arrival airports, retrieve matching flights
+        */
+        $(departure_nodes).each((i, departure_node) => {
+            $(arrival_nodes).each((j, arrival_node) => {
+                get_flights(departure_node, arrival_node)
             });
         });
-        return flight_responses;
     });
 
-    flights.then((response) => {
-        console.log(response);
-    });
 
-}
+    /*
+    *   For this particular departure/arrival combination, retrieve a list of flights
+    */
+    let get_flights = (departure_node, arrival_node) => {
+        get_filtered("flights", {
+            'departure_id': departure_node.data.id,
+            'arrival_id': arrival_node.data.id,
+        }).then((flight_list) => {
+            $(flight_list).each((i, flight) => {
+                let flight_node = new Node(flight);
+                flight_node.adjacent.departure = departure_node;
+                flight_node.adjacent.arrival = arrival_node;
+                get_info(flight_node);
+            });
+        });
+    };
+
+
+    let get_info = (flight_node) => {
+        let get_instances = get_filtered("instances", {
+            'flight_id': flight_node.data.id,
+        });
+        let get_plane = get('planes', flight_node.data.plane_id);
+        let get_airline = get('airlines', flight_node.data.airline_id);
+        Promise.all([get_instances, get_plane, get_airline]).then(([instances, plane, airline]) => {
+            let plane_node = new Node(plane);
+            flight_node.adjacent.plane = plane_node;
+            plane_node.adjacent.flight = flight_node;
+
+            let airline_node = new Node(airline);
+            airline_node.adjacent.flight = flight_node;
+            flight_node.adjacent.airline = airline_node;
+
+            let instance_nodes = makeNodes(instances);
+            $(instance_nodes).each((i, instance_node) => {
+                instance_node.adjacent.flight = flight_node;
+                display_flight(instance_node);
+            });
+        });
+    };
+
+    let display_flight = (instance_node) => {
+        if (instance_node.data['is_cancelled']) {
+            return;
+        }
+        let flight_node = instance_node.adjacent.flight;
+        let plane_node = flight_node.adjacent.plane;
+        let airline_node = flight_node.adjacent.airline;
+        let departure_node = flight_node.adjacent.departure;
+        let arrival_node = flight_node.adjacent.arrival;
+
+        let instance = instance_node.data;
+        let flight = flight_node.data;
+        let plane = plane_node.data;
+        let airline = airline_node.data;
+        let departure = departure_node.data;
+        let arrival = arrival_node.data;
+
+        let display_div = $('<div class = "flight"></div>');
+        display_div.data('instance_id', instance.id);
+        display_div.data('flight_id', flight.id);
+        display_div.data('plane_id', plane.id);
+        display_div.data('airline_id', airline.id);
+        display_div.data('departure_id', departure.id);
+        display_div.data('arrival_id', arrival.id);
+
+        $('<span class = "airline"></span>').text(airline['name']).appendTo(display_div);
+        $('<span class = "date"></span>').text(instance['date']).appendTo(display_div);
+        $('<span class = "departure_time"></span>').text(flight['departs_at']).appendTo(display_div);
+        $('<span class = "arrival_time"></span>').text(flight['arrives_at']).appendTo(display_div);
+        $('<span class = "departure_code"></span>').text(departure['code']).appendTo(display_div);
+        $('<span class = "arrival_code"></span>').text(arrival['code']).appendTo(display_div);
+
+        $('#search_results').append(display_div);
+    };
+};
+
+
+
+
 
 /*
 *   Perform after successful login

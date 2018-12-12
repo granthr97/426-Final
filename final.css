@@ -1,5 +1,17 @@
 body {
 	animation-duration: 1s;
+	text-align: center;
+
+	background-image: url("airplanes-background.jpg");
+
+	background-color: #cccccc;
+	height: 600px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: relative;
+
+
 }
 
 .ticket {
@@ -36,8 +48,8 @@ body {
 
 .ticket_info > div > div {
 	height: 100%;
-	display: block;	
-	float: left;	
+	display: block;
+	float: left;
 }
 
 .ticket_flight_info > div{
@@ -90,15 +102,16 @@ p {
 	cursor: pointer;
 }
 .flight:hover >td >div {
-	background-color: #000000a0;
+	background-color: #ffffffa0;
 	color: white;
 	font-size: 18px;
 }
 .flight > td > div {
 	padding: 10px;
 	margin: 2px;
-	background-color: #00000018;
+	background-color: #00000048;
 	border-radius: 4px
+	color:white;
 }
 
 #sort_options >th >div {
@@ -111,11 +124,104 @@ p {
 
 #map {
 	height: 400px;
-	width: 800px;
+	width: 700px;
+	margin-left:300px;
+	border: solid 5px #000000a0;
 }
 
 .nav {
+
 	display: inline-block;
 	margin: 5px;
 	padding: 5px;
+	color:white;
+	background: #000000a4;
+	  border-radius: 15px;
+
+
+}
+
+.nav:hover {
+	  background-color: #ffffffa5;
+	  color: black;
+}
+
+/
+#frominput {
+	float:auto;
+}
+#toinput {
+	float:auto;
+}
+/*
+#filterdiv {
+float:left;
+}
+
+
+*/
+#currentdisplay {
+	padding-top: 20px;
+	color:white;
+
+
+}
+#search_display{
+	text-align: center;
+	padding-left:340px;
+
+}
+#search_results{
+	padding-top: 20px;
+	overflow:scroll;
+	height:300px;
+
+}
+#search_btn {
+	display: inline-block;
+	margin: 5px;
+	padding: 7px;
+	color:white;
+	background: #000000a4;
+	border-radius: 15px;
+	margin-top:10px;
+	border:none;
+
+}
+
+#search_btn:hover {
+
+	background-color: #ffffffa5;
+	color: black;
+
+
+}
+#to_city {
+	background-color: #ffffff95;
+	color: black;
+	border:none;
+	padding:3px;
+	border-radius:5px;
+	text-align:center;
+}
+#from_city {
+	background-color: #ffffff95;
+	color: black;
+	border:none;
+	padding:3px;
+	border-radius:5px;
+	text-align:center;
+}
+
+#airline_filter {
+	background-color: #ffffff95;
+	color: black;
+	border:none;
+	padding:3px;
+	border-radius:5px;
+	text-align:center;
+}
+
+*:focus {
+	outline: none;
 }

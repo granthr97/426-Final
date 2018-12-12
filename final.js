@@ -73,13 +73,8 @@ let log_in = (user, pass) => {
                 password: password,
             }
         },
-        success: (response) => {
-            console.log('Logged in');
-            after_login();
-        },
+        success: after_login,
         error:(response) => {
-            console.log('Error logging in');
-            console.log(response);
             $('#login_user').val()
             $('#login_pass').val()
             $('#msg_div').text('Error: bad username or password');
@@ -94,7 +89,7 @@ let log_in = (user, pass) => {
 $(() => {
     display_login_page();
     log_in('granthr', 730047576).then(() => {
-        find_instances('Charlotte', 'San Francisco');
+        find_instances('Miami', 'New Orleans');
         get_random_flight();
     });
 });
@@ -136,7 +131,8 @@ let construct_search = () => {
     search_parameters.append('<div id = "frominput"><p>from </p><input type="text" id="from_city" placeholder = "New Orleans"></div>');
     search_parameters.append('<div id = "toinput"><p>to </p><input type="text" id="to_city" placeholder = "Miami"><br></div>');
     $('<button id="search_btn">Search</button>').appendTo(search_parameters).on('click', find_instances);
-    let filter = $('<div id = "filterdiv"><p>airlines </p><input type="text" id="airline_filter"><br></div>').appendTo(search_parameters);
+
+    $('<div id = "filterdiv"><p>airlines</p><input type="text" id="airline_filter"><br></div>').appendTo(search_parameters);
     $('#airline_filter').on('input', function() {
         filter_airlines($(this).val());
     });
@@ -163,6 +159,8 @@ let makeNodes = (data_array, name) => {
     return nodes;
 };
 
+let name_order = 1;
+let date_order = 1;
 /*
 *   Search for user-queried instances (occurrences of flights), acquire and
 *   link relevant data using directed graph nodes, and display the results.
@@ -174,12 +172,12 @@ let find_instances = (to, from) => {
         let search_header = $('<tr id = "sort_options"></tr>');
         search_results.empty();
 
-        function compare(a, b){
+        function compare(a, b, order){
             if(a > b) {
-                return 1;
+                return 1 * order;
             }
             else if(a < b) {
-                return -1;
+                return -1 * order;
             }
             else return 0;
         }
@@ -189,35 +187,55 @@ let find_instances = (to, from) => {
             let compareName = function(a, b){
                 let $a = $(a).find('.airline div').text();
                 let $b = $(b).find('.airline div').text();
-                return compare($a, $b);
+                return compare($a, $b, name_order);
             }
 
             let flights = search_results.children('.flight');
             flights = flights.sort(compareName);
             make_header();
             flights.detach().appendTo(search_results);
+            name_order *= -1;
         };
 
-        search_header.append($('<th id = "airline_sort"></th>').append($('<div></div>')
-            .text('Airline:'))).click((e) => {
-                name_sort();
-        });
+        let time_sort = () => {
+            search_header.remove();
 
-        search_header.append($('<th id = "date_sort"></th>').append($('<div></div>')
-            .text('Date:')));
+            let compareTime = function(a, b){
+                let $a = $(a).find('.time div').text();
+                let $b = $(b).find('.time div').text();
+                return compare($a, $b, date_order);
+            };
 
-        search_header.append($('<th id = "departure_time_sort"></th>').append($('<div></div>')
-            .text('Departure Time:')));
+            let compareDate = function(a, b){
+                let $a = $(a).find('.date div').text();
+                let $b = $(b).find('.date div').text();
 
-        search_header.append($('<th id = "arrival_time_sort"></th>').append($('<div></div>')
-            .text('Arrival Time:')));
+                let date_compare = compare($a, $b, date_order);
+                if (date_compare != 0) {
+                    return date_compare;
+                } else {
+                    return compareTime(a, b);
+                }
+                // if (compare($a, $b, date_order) == 0) {
+                //     return compare($a, $b, date_order);
+                // } else {
+                //     return compareTime(a, b, date_order);
+                // }
+            };
 
-        search_header.append($('<th id = "departure_code_sort"></th>').append($('<div></div>')
-            .text('From:')));
+            let flights = search_results.children('.flight');
+            flights = flights.sort(compareDate);
+            make_header();
+            flights.detach().appendTo(search_results);
+            date_order *= -1;
+        };
 
-        search_header.append($('<th class = "arrival_code_sort"></th>').append($('<div></div>')
-            .text('To:')));
-
+        $('<th id = "airline_sort"></th>').html('<div>airline</div>').click(name_sort).appendTo(search_header);
+        $('<th id = "date_sort"></th>').html('<div>date</div>').click(time_sort).appendTo(search_header);
+        $('<th id = "departure_time_sort"></th>').html('<div>departure time</div>').click(time_sort).appendTo(search_header);
+        $('<th id = "arrival_time_sort"></th>').html('<div>arrival time</div>').click(time_sort).appendTo(search_header);
+        $('<th id = "departure_code_sort"></th>').html('<div>from</div>').appendTo(search_header);
+        $('<th id = "arrival_code_sort"></th>').html('<div>to</div>').appendTo(search_header);
         search_results.append(search_header);
     };
 
@@ -318,7 +336,7 @@ let find_instances = (to, from) => {
         let arrival = arrival_node.data;
 
         let displayrow = $('<tr class = "flight"></tr>').click(() => {
-            make_game(instance_node);
+            show_flight(departure.latitude, departure.longitude, arrival.latitude, arrival.longitude, instance_node);
         });
         displayrow.data('instance_id', instance.id);
         displayrow.data('flight_id', flight.id);
@@ -354,60 +372,26 @@ let find_instances = (to, from) => {
 *   Perform after successful login
 */
 let after_login = () => {
-    $("body").empty().append('<div id = \'nav\'><div class = \'nav\' id=\'booknav\'><h3>Book Tickets</h3></div><div ' +
-        'class = \'nav\' id = \'gamenav\'><h3>Play Game</h3></div><div class = \'nav\' id = \'ticketnav\'><h3>' +
-        'View Tickets</h3></div></div><div id="currentdisplay"></div>');
+    $("body").empty().append('<div id="currentdisplay"></div>');
+
     construct_search();
 }
 
 
-/*
-*   Retrieve a sorted list of seats from
-*/
-let get_instance_seats = (instance_id) => {
-    return get("instances", instance_id)
-
-        .then((response) => {
-            return get("flights", response['flight_id']);
-        })
-
-        .then((response) => {
-            return get_filtered("seats", {
-                'plane_id': response['plane_id']
-            });
-        })
-
-        .then((response) => {
-            response.sort((a, b) => {
-                return (a.row !== b.row) ? a.row - b.row : a['number'].localeCompare(b['number']);
-            });
-
-            return response;
-        });
-};
-
-
-let make_game = (instance_node) => {
-    console.log(instance_node);
-    let flight_node = instance_node.adjacent['flight'];
-    let departure = flight_node.adjacent['departure'].data;
-    let arrival = flight_node.adjacent['arrival'].data;
-
-    var lat1 = parseFloat(departure.latitude);
-    var lon1 = parseFloat(departure.longitude);
-    var lat2 = parseFloat(arrival.latitude);
-    var lon2 = parseFloat(arrival.longitude);
-
+let show_flight = (lat1, lon1, lat2, lon2, instance_node) => {
+    lat1 = parseFloat(lat1);
+    lon1 = parseFloat(lon1);
+    lat2 = parseFloat(lat2);
+    lon2 = parseFloat(lon2);
     let lat_center = (lat1 + lat2) / 2;
     let lon_center = (lon2 + lon2) / 2;
 
-    $('body').empty();
-    let game_html = '<div id= \"thing\"> To Win a Free flight, guess the distance of the flight! ' +
-        '</div><div id="map"></div><div class=\"guessing\"><form>Guess the Distance:<br><input type="number" ' +
-        'name="distance" id="distance" min="0"></form><button type="text" class="submit">Submit</button></div>';
 
-    $('body').append(game_html);
+    $('#currentdisplay').empty().append('<div id="map"></div><button id = "purchase">purchase now</button>');
 
+    $('#purchase').click(() => {
+       buy_ticket(instance_node);
+    });
     let initMap = () => {
         let map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: lat_center, lng: lon_center},
@@ -415,13 +399,12 @@ let make_game = (instance_node) => {
             mapTypeId: 'terrain'
         });
 
-        var lineSymbol = {
+        let lineSymbol = {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             //path: 'M 0,-5 A  1,1 0 0 1 1,-4 L 1,-1 5,1 5,2 1,1 1,3 2,4 2,5 0,4  0,4 -2, 5 -2,4, -1,3 -1,1 -5,2 -5,1 -1,-1 -1,-4 0,-5',
             scale: 3,
-            strokeColor: 'red'
+            strokeColor: 'orange'
         };
-
 
 
         let line = new google.maps.Polyline({
@@ -466,11 +449,11 @@ let make_game = (instance_node) => {
 
 
 
-// This example adds an animated symbol to a polyline.
+    // This example adds an animated symbol to a polyline.
 
 
 
-//https://stackoverflow.com/questions/18883601/function-to-calculate-distance-between-two-coordinates-shows-wrong
+    //https://stackoverflow.com/questions/18883601/function-to-calculate-distance-between-two-coordinates-shows-wrong
     function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
         let R = 6371; // Radius of the earth in km
         let dLat = deg2rad(lat2-lat1);  // deg2rad below
@@ -493,23 +476,73 @@ let make_game = (instance_node) => {
     function deg2rad(deg) {
         return deg * (Math.PI/180)
     }
-}
-
-let show_ticket = (won) => {
-
 };
 
+let buy_ticket = (instance_node) => {
+    $('#currentdisplay').empty()
+        .append('<div><p>first name</p><input type="text" id="firstinput" placeholder = "Johnny"></div>')
+        .append('<div><p>last name</p><input type="text" id="lastinput" placeholder = "Appleseed"></div>')
+        .append('<div><p>age</p><input type="text" id="ageinput" placeholder = "27"></div>')
+        .append('<div><p>gender</p><input type="text" id="genderinput" placeholder = "male"></div>')
+        .append('<div><p>email address</p><input type="text" id="emailinput" placeholder = "johnnyappleseed@gmail.com"></div>')
+        .append('<div><button id = "submitbutton">purchase ticket</button>');
 
-let get_random_flight = () => {
-    let flights = get('flights');
-    flights.then((flights) => {
-        let pickedflight = flights[Math.floor(Math.random()*flights.length)];
-        console.log(pickedflight);
-        let departure_airport = get('airports', pickedflight.departure_id).then((departure) => {
-            console.log(departure);
-        })
-        let arrival_airport = get('airports', pickedflight.arrival_id).then((arrival) =>{
-            console.log(arrival);
+    function make_conformation_code() {
+        let code = "";
+        let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        for (let i = 0; i < 8; i++)
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        return code;
+    }
+
+    $('#submitbutton').click(() => {
+        let code = make_conformation_code()
+        $.ajax(root_url + 'itineraries', {
+            type: 'POST',
+            xhrFields: {
+                withCredentials: true
+            },
+            dataType: "json",
+            data: {
+                itinerary: {
+                    "email": $('#emailinput').val(),
+                    "confirmation_code": code
+                }
+            },
+            error: (response) => {
+                alert('Error: Bad Submission.');
+            }
+        }).then((response) => {
+            $.ajax(root_url + 'tickets', {
+                type: 'POST',
+                xhrFields: {
+                    withCredentials: true
+                },
+                dataType: "json",
+                data: {
+                    ticket: {
+                        "first_name": $('#firstinput').val(),
+                        "last_name": $('#lastinput').val(),
+                        "age": parseInt($('#ageinput').val()),
+                        "gender": $('#genderinput').val(),
+                        "is_purchased": true,
+                        "instance_id": instance_node.data.id,
+                        "itinerary_id": response.id
+                    }
+                },
+                success: () => {
+                    alert('Success: Ticket Purchased! Conformation code: ' + code);
+                    construct_search();
+                },
+                error: (response) => {
+                    alert('Error: Bad Submission.');
+                }
+            });
         });
-    })
+
+
+    });
+
+
 };

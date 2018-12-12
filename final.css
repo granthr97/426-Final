@@ -1,0 +1,121 @@
+body {
+	animation-duration: 1s;
+}
+
+.ticket {
+	height: 500px;
+	width: 400px;
+	border: solid;
+	border-color: grey;
+	text-align: center;
+	border-radius: 2.5%;
+	background-color: #0059b3;
+	color: #ccc;
+}
+
+.ticket_flight_info{
+	margin-top: 5%;
+	height: 33.33%;
+}
+
+.ticket .ticket_holder {
+	height: 20%;
+}
+
+.ticket .ticket_info {
+	height: 43%;
+}
+
+.barcode_container {
+	height: 37%;
+}
+
+.ticket_info > div{
+	height: 33.33%;
+}
+
+.ticket_info > div > div {
+	height: 100%;
+	display: block;	
+	float: left;	
+}
+
+.ticket_flight_info > div{
+	width: 25%;
+}
+
+.ticket_location_info > div, .timing_info > div{
+	width: 33.33%;
+}
+
+.solo > div{
+	height: 100%;
+}
+
+.duo > div:nth-child(1){
+	height: 33%;
+}
+
+.duo > div:nth-child(2){
+	height: 67%;
+}
+
+p {
+	margin: 0;
+	font-size: 30px;
+}
+
+.airport_code > p{
+	font-size: 40px;
+}
+
+.name > p {
+	font-size: 45px;
+}
+
+.airline > p {
+	font-size: 25px;
+}
+
+.ticket_holder{
+	border-bottom: solid;
+	border-color: grey;
+}
+
+.upper {
+	font-size: 12px;
+}
+
+.flight:hover {
+	cursor: pointer;
+}
+.flight:hover >td >div {
+	background-color: #000000a0;
+	color: white;
+	font-size: 18px;
+}
+.flight > td > div {
+	padding: 10px;
+	margin: 2px;
+	background-color: #00000018;
+	border-radius: 4px
+}
+
+#sort_options >th >div {
+	background-color: #00000090;
+	font-size: 18px;
+	padding: 10px;
+	margin: 2px;
+	border-radius: 4px
+}
+
+#map {
+	height: 400px;
+	width: 800px;
+}
+
+.nav {
+	display: inline-block;
+	margin: 5px;
+	padding: 5px;
+}
